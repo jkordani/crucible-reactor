@@ -13,7 +13,7 @@
                                                            :params `(("userName" . ,username)
                                                                      ("password" . ,password)))))
 
-(defun request-endpoint (endpoint &key (method :get) (params nil))
+(defun request-endpoint (endpoint &key (method :get) (params nil) (content nil))
   (if (null *base-url*)
       (error "Not Logged in")
       (multiple-value-bind (response return-code headers)
@@ -25,6 +25,7 @@
            :force-binary t
            :accept "application/json"
            :content-type "application/json"
+           :content content
            :parameters (append params
                                (if (not (null *auth-token*))
                                    (list (list* "FEAUTH" (rest (first *auth-token*))))
