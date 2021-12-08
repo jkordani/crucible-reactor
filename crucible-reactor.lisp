@@ -6,6 +6,22 @@
 
 (defparameter *base-url* nil)
 
+(defun make-review (title project-key repository revision-list)
+  (list
+   `(:review-data
+     (:project-key . ,project-key)
+     (:name . ,title)
+     (:STATE . "Draft")
+     (:TYPE . "REVIEW")
+     (:ALLOW-REVIEWERS-TO-JOIN . T))
+   (list
+    :changesets
+    `(:repository . ,repository)
+    (list
+     :changeset-data
+     (mapcar (lambda (rev) (list* :id rev))
+             revision-list)))))
+
 (defun login (username password base-url)
   (setf *base-url* base-url)
   (setf *auth-token*
@@ -19,8 +35,10 @@
       (multiple-value-bind (response return-code headers)
           (drakma:http-request
            (format nil "~a/~a"
+                   ;; this is to allow for users forgetting or adding too many trailing and leading slashes
+                   ;; and to ensure a trailing slash for the final path
                    (string-right-trim '(#\/) *base-url*)
-                   (string-left-trim '(#\/) endpoint))
+                   (format nil "~a/" (string-trim '(#\/) endpoint)))
            :method method
            :force-binary t
            :accept "application/json"
@@ -29,9 +47,10 @@
            :parameters (append params
                                (if (not (null *auth-token*))
                                    (list (list* "FEAUTH" (rest (first *auth-token*))))
-                                   nil)))
+                                   nil))
+           )
 
-        (if (/= return-code 200)
+        (if (not (< 199 return-code 300))
             (error "Request failed ~a" return-code))
 
         (values (json:decode-json-from-string
@@ -40,3 +59,10 @@
 
 (defun get-users ()
   (request-endpoint "/rest-service-fecru/admin/users/"))
+
+(defun create-review (title project-key repo-name revision-list)
+  (let ((new-review
+          (make-review title project-key repo-name revision-list)))
+    (request-endpoint "/rest-service/reviews-v1"
+                      :method :post
+                      :content (json:encode-json-to-string new-review))))
