@@ -9,8 +9,9 @@
 (defun login (username password base-url)
   (setf *base-url* base-url)
   (setf *auth-token*
-        (request-endpoint "/auth/login" :method :post :params `(("userName" . ,username)
-                                                                ("password" . ,password)))))
+        (request-endpoint "rest-service-fecru/auth/login" :method :post
+                                                           :params `(("userName" . ,username)
+                                                                     ("password" . ,password)))))
 
 (defun request-endpoint (endpoint &key (method :get) (params nil))
   (if (null *base-url*)
@@ -34,4 +35,4 @@
                 return-code (cdr (assoc :content-type headers))))))
 
 (defun get-users ()
-  (request-endpoint "/admin/users"))
+  (request-endpoint "rest-service-fecru/admin/users"))
