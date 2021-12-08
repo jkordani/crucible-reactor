@@ -23,6 +23,7 @@
                    (string-left-trim '(#\/) endpoint))
            :method method
            :force-binary t
+           :accept "application/json"
            :content-type "application/json"
            :parameters (append params
                                (if (not (null *auth-token*))
